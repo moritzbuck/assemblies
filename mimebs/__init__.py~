@@ -1,0 +1,179 @@
+from __future__ import division
+
+import sh
+import os
+import json
+from tqdm import tqdm
+#from plumbing.autopaths import AutoPaths
+
+raw_slurm = """#!/bin/bash
+#SBATCH -D %s
+#SBATCH -J ray_%s_%s
+#SBATCH -o %sass.out
+#SBATCH -e %sass.err
+#SBATCH -A b2013151
+#SBATCH -t 7-00:00:00
+#SBATCH -n 16
+#SBATCH -p node
+#SBATCH -C mem512GB
+#SBATCH --mail-user murumbii@gmail.com
+#SBATCH --mail-type=ALL
+"""
+
+raw_map_slurm = """#!/bin/bash
+#SBATCH -D %s
+#SBATCH -J map_%s_%s
+#SBATCH -o %smap.out
+#SBATCH -e %smap.err
+#SBATCH -A b2013151
+#SBATCH -t 2-00:00:00
+#SBATCH -n 16
+#SBATCH -p node
+#SBATCH --mail-user murumbii@gmail.com
+#SBATCH --mail-type=ALL
+
+"""
+
+raw_newbler_slurm = """#!/bin/bash
+#SBATCH -D %s
+#SBATCH -J newbler_%s
+#SBATCH -o %snewbler.out
+#SBATCH -e %snewbler.err
+#SBATCH -A b2013151
+#SBATCH -t 3-00:00:00
+#SBATCH -n 16
+#SBATCH -p node
+#SBATCH --mail-user murumbii@gmail.com
+#SBATCH --mail-type=ALL
+
+"""
+
+
+raw_map = """
+/home/moritz/repos/metassemble/scripts/map/map-bowtie2-markduplicates.sh -ct 16 %s %s %s %s %s %s
+"""
+
+
+raw_ray = """
+mpiexec -n 16 Ray231 -amos -enable-neighbourhoods -k %s -o %s %s
+"""
+
+raw_newbler = """
+/home/moritz/repos/metassemble/scripts/assembly/merge-asm-newbler.sh %s %s
+"""
+
+raw_path =  "/pica/v8/b2013151/INBOX/"
+rub_path = raw_path + "B.Bergman_14_02/"
+ill_path = raw_path + "B.Bergman_14_01/"
+samples_json = "/home/moritz/people/mimebs/samples.json"
+nr_threads = 16
+executable = 'Ray231'
+out_root = '/pica/v8/b2013151/private/Bergman_14/'
+raw_ass = out_root + "raw_assemblies/"
+merged_ass = out_root + "merged_assemblies/"
+newbler = sh.Command("/home/moritz/repos/metassemble/scripts/assembly/merge-asm-newbler.sh")
+minimus = sh.Command("/home/moritz/repos/metassemble/scripts/assembly/merge-asm-minimus2.sh")
+
+
+with open(samples_json) as handle:
+    samples = json.load(handle)
+
+class Assembly(object):
+
+    def __repr__(self): return '<%s object %s with k-mer length %i>' % \
+        (self.__class__.__name__, self.name, self.k)
+ 
+    
+    def __init__(self, name, sample_dic, k=31):
+        self.dirs = [ rub_path + sample_dic['rubicon_path'] + "/", ill_path + sample_dic['illumina_path'] + "/"]
+        self.name = name
+        self.subdirs = sum([[d+t+"/"  for t in os.listdir(d)]  for d in self.dirs],[])
+        self.pairs = sum([zip([t+f for f in os.listdir(t) if ".gz" in f and "md5" not in f and "_2." not in f],[t+f for f in os.listdir(t) if ".gz" in f and  "md5" not in f and "_1." not in f])  for t in self.subdirs],[])
+        self.k = k
+        self.out_dir = raw_ass + self.name + "/" + str(self.k) + "/"
+        if not os.path.exists(self.out_dir):
+            os.makedirs(self.out_dir)
+        
+
+    def run(self):
+        if not os.path.exists( self.out_dir + "ray" ) and os.path.exists(raw_ass + self.name + "/41/ray/Contigs.fasta"):
+            cleans = ["sickle pe -f " + p[0] + " -r " + p[1] + " -t sanger -n -o " + p[0].replace("fastq.gz","clean.fastq") + " -p " + p[1].replace("fastq.gz","clean.fastq") + " -s " +  p[0].replace("_1.fastq.gz","_single.clean.fastq") +"\n" for p in self.pairs if not os.path.exists(p[0].replace("_1.fastq.gz","_single.clean.fastq"))]     
+            self.arg = sum([sum([["-p"],list(p)],[]) for p in self.pairs],[])
+            self.arg = [p.replace("fastq.gz","clean.fastq") for p in self.arg]
+            self.script = raw_slurm % ( self.out_dir, self.name, str(self.k), self.out_dir, self.out_dir)
+            for c in cleans:
+                self.script = self.script + c 
+            self.script = self.script + raw_ray % (str(self.k), self.out_dir + "ray", " ".join(self.arg))
+        
+            with open(self.out_dir + "slurm_script.sh","w") as handle:
+                handle.writelines(self.script)
+            sh.sbatch(self.out_dir + "slurm_script.sh")
+
+    def make_stats(self, rerun = False):
+        if os.path.exists(self.out_dir + "mapper/"):
+            if os.path.exists(self.out_dir + self.name + "_stats.json") and not rerun:
+                print "Loading stats for", self.name
+                with open(self.out_dir + self.name + "_stats.json") as handle:
+                    self.stats = json.load(handle)
+            else:
+                print "Computing stats for", self.name
+                self.stats = {}
+                self.stats['k'] = self.k
+                self.stats['raw_reads'] = self.pairs
+                self.stats['output'] = self.out_dir
+                print "Computing raw number of paired-reads"
+                self.stats['pairs_count'] = {"_".join(p[0].split("/")[-1].split("_")[0:-1]) : int(sh.zgrep("-Ec", "$", p[0]))/4 for p in tqdm(self.pairs)}
+                print "Computing clean number of paired-reads"
+                self.stats['clean_pairs_count'] = {"_".join(p[0].split("/")[-1].split("_")[0:-1]) : int(sh.grep("-Ec", "$", p[0].replace("fastq.gz","clean.fastq")))/4 for p in tqdm(self.pairs)}
+                self.stats['ratios'] = {k : self.stats['clean_pairs_count'][k]/tot for k,tot in self.stats['pairs_count'].iteritems()}
+                self.stats['map_stats'] = {}
+                self.stats['map_stats']['mapped_frac'] = float(sh.grep("overall",  self.out_dir + "map.err").split(" ")[0][0:-1])/100
+                self.stats['map_stats']['dupli_frac'] = float(sh.grep("Unknown", self.out_dir + "mapper/ray_" +str(self.k)+ "_" + self.name+ "-smd.metrics").split("\t")[7])
+                self.stats['Success'] =  os.path.exists(self.out_dir + "ray/Contigs.fasta")
+                if self.stats['Success']:
+                    t=sh.assemstats(0,self.out_dir + "ray/Contigs.fasta" )
+                    self.stats['Assembly'] = {a:b for a,b in  zip(*[[w.strip() for w in  l.split("\t")][1:] for l in str(t).split("\n")[0:2]])}
+
+            with open(self.out_dir + self.name + "_stats.json", 'w') as handle:
+                json.dump(self.stats, handle)
+        
+        
+    def map(self):
+        if os.path.exists(self.out_dir + "ray/Contigs.fasta") and not os.path.exists(self.out_dir + "mapper/"):
+            lefties = ",".join([p[0] for p in self.pairs])
+            righties = ",".join([p[1] for p in self.pairs])
+
+            slurm_header = raw_map_slurm % ( self.out_dir, self.name, str(self.k), self.out_dir, self.out_dir)
+            mapper_cmd = raw_map % (lefties, righties, self.name, self.out_dir + "ray/Contigs.fasta", "ray_" + str(self.k), self.out_dir + "mapper/")
+            self.map_script = slurm_header + mapper_cmd
+        
+            with open(self.out_dir + "map_slurm_script.sh","w") as handle:
+                handle.writelines(self.map_script)
+            sh.sbatch(self.out_dir + "map_slurm_script.sh")
+            print "Launched mapper for", self.name, "with k-mer size", self.k
+
+
+def merge(assemblies, name):
+    fastas = [ass.out_dir + "ray/Contigs.fasta" for ass in assemblies if os.path.exists(ass.out_dir + "ray/Contigs.fasta")]
+    if not os.path.exists(merged_ass + name) : os.makedirs(merged_ass + name)
+    in_size = sum([os.stat(f).st_size for f in fastas])
+    newbler = raw_newbler % (merged_ass + name, " ".join(fastas))
+    header = raw_newbler_slurm % ( merged_ass + name +"/", name, merged_ass + name+"/", merged_ass + name+"/")
+    with open(merged_ass + name + "/" + "map_slurm_script.sh","w") as handle:
+        handle.writelines(header + newbler)
+    
+def merge_all():
+    merge(frac_0p8, "frac_0p8")
+    merge(frac_0p1, "frac_0p1")
+    merge(frac_3p0, "frac_3p0")
+
+    
+all_31_asses =   [Assembly(sam, samples[sam],k=31)  for sam in tqdm(samples)]
+all_41_asses =   [Assembly(sam, samples[sam],k=41)  for sam in tqdm(samples)]
+all_51_asses =   [Assembly(sam, samples[sam],k=51)  for sam in tqdm(samples)]
+            
+frac_0p1 = [ass for ass in all_31_asses + all_41_asses + all_51_asses if ass.name in [k for k,v in samples.iteritems() if v['fraction'] == 0.1]]
+frac_0p8 = [ass for ass in all_31_asses + all_41_asses + all_51_asses if ass.name in [k for k,v in samples.iteritems() if v['fraction'] == 0.8]]
+frac_3p0 = [ass for ass in all_31_asses + all_41_asses + all_51_asses if ass.name in [k for k,v in samples.iteritems() if v['fraction'] == 3.0]]
+
+
