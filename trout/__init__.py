@@ -5,6 +5,7 @@ import os
 import json
 from tqdm import tqdm
 from pandas import DataFrame
+from Bio import SeqIO
 
 #from plumbing.autopaths import AutoPaths
 
@@ -50,6 +51,21 @@ raw_newbler_slurm = """#!/bin/bash
 
 """
 
+raw_concoct_slurm = """#!/bin/bash
+#SBATCH -D %s
+#SBATCH -J concoct_%s
+#SBATCH -o %sconcoct.out
+#SBATCH -e %sconcoct.err
+#SBATCH -A b2011035
+#SBATCH -t 3-00:00:00
+#SBATCH -n 1
+#SBATCH -p core
+#SBATCH --mail-user murumbii@gmail.com
+#SBATCH --mail-type=ALL
+
+"""
+
+
 #### remove the paired reads make it to single reads
 raw_map = """
 /home/moritz/repos/metassemble/scripts/map/map-bowtie2-markduplicates_singles.sh -ct 16 %s %s %s %s %s
@@ -67,6 +83,15 @@ sbatch %s
 raw_newbler = """
 /home/moritz/repos/metassemble/scripts/assembly/merge-asm-newbler.sh %s %s
 """
+
+raw_concoct = """
+concoct --coverage_file  %s --composition_file %s -l %s -b %s --no_total_coverage
+"""
+
+raw_checkm = """
+checkm lineage_wf -t 16 -x fasta . %s/checkm > %scheckm.txt
+"""            
+
 
 raw_path =  "/pica/v3/b2011138/TroutBogHypo/"
 nr_threads = 16
@@ -256,25 +281,71 @@ def merge_final():
         handle.writelines(header + newbler)
     sh.sbatch(merged_ass + "merge_slurm_script.sh")
 
+def merge_set(asses, name):
+    fastas = [ass.merge_dir + "454AllContigs.fna" for ass in asses]
+    if not os.path.exists(merged_ass + name ) : os.makedirs(merged_ass + name)
+    in_size = sum([os.stat(f).st_size for f in fastas])
+    newbler = raw_newbler % (merged_ass + name, " ".join(fastas))
+    header = raw_newbler_slurm % ( merged_ass + name ,"merged_" + name, merged_ass + name, merged_ass +name)
+    with open(merged_ass + name + "merge_slurm_script.sh","w") as handle:
+        handle.writelines(header + newbler)
+    sh.sbatch(merged_ass + name + "merge_slurm_script.sh")
+
+
+
 def map_final():
     asses = [Assembly(p.replace(".fastq.gz","")) for p in os.listdir(raw_path) if ".fastq.gz" in p and not "clean" in p]
     for a in asses:
         a.map2ref(merged_ass +"454AllContigs.fna")
 
-def compile_contig_matrices():
-    fs = sh.find(raw_ass, "-name", "*-smds.coverage.percontig").stdout.split("\n")[:-1]
-    fs = [f for f in fs if "_2ref" in f]
+def concoct_the_hell(name):
+    if not os.path.exists(merged_ass + name + "/concoct/" ) : os.makedirs(merged_ass + name + "/concoct/")
+    script = raw_concoct_slurm % (merged_ass + name + "/concoct/" , name, merged_ass + name + "/concoct/",merged_ass + name + "/concoct/")
+    script += raw_concoct % (stats_out + name +"_contig_coverages_for_concoct.csv", merged_ass + name + "/454AllContigs.fna", 2000,  merged_ass + name + "/concoct/")
+    with open(merged_ass + name + "/concoct/" + "concoct_slurm_script.sh","w") as handle:
+        handle.writelines(script)
+    sh.sbatch(merged_ass + name + "/concoct/" + "concoct_slurm_script.sh")
+
+def make_bins(name):
+    clusters = DataFrame.from_csv(merged_ass + name + "/concoct/" + [f for f in  os.listdir(merged_ass + name + "/concoct/") if "clustering_" in f ][0], header = None)
+    if not os.path.exists(merged_ass + name + "/bins/") : os.makedirs(merged_ass + name + "/bins/")
+    
+    with open( merged_ass + name + "/454AllContigs.fna") as handle:
+        ass = [s for s in SeqIO.parse(handle,"fasta")]
+    
+    for i in set(clusters[1]):
+        cons = list(clusters[clusters[1]==i].index)
+        with open(merged_ass + name + "/bins/bin_" + str(i) +  ".fasta", "w") as handle:
+            SeqIO.write([a for a in ass if a.name in cons], handle, "fasta")  
+
+
+                    
+def compile_contig_matrices(names = None):
+    if names == None:
+        fs = sh.find(raw_ass, "-name", "*-smds.coverage.percontig").stdout.split("\n")[:-1]
+        fs = [f for f in fs if "_2ref" in f]
+    else:
+        fs = sh.find(merged_ass + names, "-name", "*-smds.coverage.percontig").stdout.split("\n")[:-1]
+
     df = DataFrame.from_csv(fs[0],sep="\t")
     glob = df.ix[:,0:2]
     for f in fs:
-        id = [c for c in f.split("/") if "IH" in c][0]
+        if names == None:
+            id = [c for c in f.split("/") if "IH" in c][0]
+        else:
+            id = [c.replace("map_","") for c in f.split("/") if "map_" in c][0]
         values =  DataFrame.from_csv(f,sep="\t")["cov_mean_sample_0"]
         assert sum([a!=b for a,b in zip(values.index, glob.index)]) == 0
         if sum([a!=b for a,b in zip(values.index, glob.index)]) == 0:
             glob[id] = values
         else:
             print f, "is weird"
-    glob.to_csv(stats_out  + "all_contig_coverages.csv",sep="\t")
+    if names == None:
+        glob.to_csv(stats_out  + "all_contig_coverages.csv",sep="\t")
+    else:
+        glob.to_csv(stats_out  + names + "_contig_coverages.csv",sep="\t")
+        glob[samples].to_csv(stats_out  + self.name + "_contig_coverages_for_concoct.csv",sep="\t")
+
     
 
 def write_lib_stats(assemblies):

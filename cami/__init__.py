@@ -13,8 +13,8 @@ raw_slurm = """#!/bin/bash
 #SBATCH -J ray_%s_%s
 #SBATCH -o %sass.out
 #SBATCH -e %sass.err
-#SBATCH -A b2014318
-#SBATCH -t 7-00:00:00
+#SBATCH -A b2011035
+#SBATCH -t 1-00:00:00
 #SBATCH -n 16
 #SBATCH -p node
 #SBATCH -C mem512GB
@@ -27,8 +27,8 @@ raw_map_slurm = """#!/bin/bash
 #SBATCH -J map_%s_%s
 #SBATCH -o %smap.out
 #SBATCH -e %smap.err
-#SBATCH -A b2014318
-#SBATCH -t 16:00:00
+#SBATCH -A b2011035
+#SBATCH -t 08:00:00
 #SBATCH -n 16
 #SBATCH -p node
 #SBATCH --mail-user murumbii@gmail.com
@@ -41,8 +41,8 @@ raw_newbler_slurm = """#!/bin/bash
 #SBATCH -J newbler_%s
 #SBATCH -o %snewbler.out
 #SBATCH -e %snewbler.err
-#SBATCH -A b2014318
-#SBATCH -t 1-00:00:00
+#SBATCH -A b2011035
+#SBATCH -t 3-00:00:00
 #SBATCH -n 16
 #SBATCH -p node
 #SBATCH --mail-user murumbii@gmail.com
@@ -50,66 +50,15 @@ raw_newbler_slurm = """#!/bin/bash
 
 """
 
-raw_concoct_slurm = """#!/bin/bash
-#SBATCH -D %s
-#SBATCH -J concoct_%s
-#SBATCH -o %sconcoct.out
-#SBATCH -e %sconcoct.err
-#SBATCH -A b2014318
-#SBATCH -t 19:00:00
-#SBATCH -n 16
-#SBATCH -p node
-#SBATCH --mail-user murumbii@gmail.com
-#SBATCH --mail-type=ALL
-
-"""
-
-raw_concoct = """
-concoct --coverage_file  %s --composition_file %s -l %s -b %s --no_total_coverage
-"""
-
-raw_checkm = """
-checkm lineage_wf -t 16 -x fasta . %s/checkm > %scheckm.txt
-"""            
-
-
-raw_hmm_pipe = """#!/bin/bash
-#SBATCH -D %s
-#SBATCH -J hmmer_pipe
-#SBATCH -o %shmmer.out
-#SBATCH -e %shmmer.err
-#SBATCH -A b2014318
-#SBATCH -t 18:00:00
-#SBATCH -n 16
-#SBATCH -p node
-#SBATCH --mail-user murumbii@gmail.com
-#SBATCH --mail-type=ALL
-
-prokka --metagenome --prefix %sannotation/ --locustag metagenome  %s454AllContigs.fna
-
-parallel --xapply -j 16 hmmersearch --max {1}  %s/annotation/metagenome.faa ::: `ls ~/glob/data/pfam/pfam-a/*.hmm` 
-""" 
-
-
+#### remove the paired reads make it to single reads
 raw_map = """
-#bowtie2-build %s
-parallel --xapply -j 16 /home/moritz/repos/metassemble/scripts/map/map-bowtie2-markduplicates.sh -ct1 {1}_R1_001.clean.fastq {1}_R2_001.clean.fastq {2} %s map map_{2}  '>' map_{2}.out  '2>' map_{2}.err ::: %s ::: %s
+/home/moritz/repos/metassemble/scripts/map/map-bowtie2-markduplicates_singles.sh -ct 16 %s %s %s %s %s
 """
-
-old_raw_map = "/home/moritz/repos/metassemble/scripts/map/map-bowtie2-markduplicates.sh -ct 16 %s %s %s %s %s"
 
 
 raw_ray = """
 k=`cat %scurrent_k.txt`
-mpiexec -n 16 Ray231 -k $k -o %s_$k %s
-k=$((k + 10))
-echo $k > %scurrent_k.txt
-sbatch %s
-"""
-
-raw_ray = """
-k=`cat %scurrent_k.txt`
-mpiexec -n 16 Ray231 -k $k -o %s_$k %s
+mpiexec -n 16 Ray231 -k $k -o %s_$k  %s
 k=$((k + 10))
 echo $k > %scurrent_k.txt
 sbatch %s
@@ -119,10 +68,10 @@ raw_newbler = """
 /home/moritz/repos/metassemble/scripts/assembly/merge-asm-newbler.sh %s %s
 """
 
-raw_path =  "/proj/b2014318/INBOX/ftp.dna.ku.dk/20140731_hiseq2a/Project_VR_Peatbog_magali/"
+raw_path =  "/home/moritz/glob/data/cami/"
 nr_threads = 16
 executable = 'Ray231'
-out_root = "/proj/b2014318/Peatbog_processed/"
+out_root = raw_path
 stats_out = out_root + "stats/"
 raw_ass = out_root + "raw_assemblies/"
 merged_ass = out_root + "merged_assemblies/"
@@ -132,44 +81,26 @@ minimus = sh.Command("/home/moritz/repos/metassemble/scripts/assembly/merge-asm-
 class Assembly(object):
 
     def __repr__(self): return '<%s object %s with k-mer length %i>' % \
-        (self.__class__.__name__, self.name, -1 if len(self.success_ks) == 0 else max(self.success_ks) )
+        (self.__class__.__name__, self.name, max(self.success_ks))
  
     
-    def __init__(self, name, k=31, name_coass = ""):
+    def __init__(self, name, k=31):
         if isinstance(name, list):
             self.name =  "coass"+name_coass
-            self.dir = raw_path 
             self.reads = [raw_path + n + ".fastq.gz" for n in name]
-            gzs = [g[:-1] for g in sh.find( raw_path , "-name", "*.fastq.gz") if any([n in g for n in name])]
-            self.pairs = zip([ d for d in gzs if "R1" in d], [d for d in gzs if  "R2" in d])
-            self.cleans = [[ f.replace("fastq.gz","clean.fastq").replace(raw_path,raw_ass).replace("/PRI_EUSM", "/cleans/PRI_EUSM") for f in p ] for p in self.pairs]
-            self.singles = [p[0].replace("_R1_001.fastq.gz","_single.clean.fastq") for p in self.pairs]
             self.coass = True
-            
         else :
-            self.dir = raw_path +name +"/"
             self.coass = False
             self.name = name
-            self.pairs = [[ d for d in os.listdir(self.dir) if ".fastq.gz" in d and "L001" in d], [d for d in os.listdir(self.dir) if ".fastq.gz" in d and "L002" in d]]
-            self.cleans = [[ f.replace("fastq.gz","clean.fastq") for f in p ] for p in self.pairs]
-            self.singles = [p[0].replace("_R1_001.fastq.gz","_single.clean.fastq") for p in self.pairs]
-
+            self.reads = raw_path + name + ".fastq.gz"
         self.k = k
-        self.out_dir = raw_ass + self.name + "/"
-        self.clean_dir = raw_ass + self.name + "/cleans/"
-        self.merge_dir = raw_ass + self.name + "/merged/" 
-
-        if not os.path.exists(raw_ass):
-            os.makedirs(raw_ass)
-        if not os.path.exists(stats_out):
-            os.makedirs(stats_out)
         if not os.path.exists(raw_ass + self.name):
-            os.makedirs(raw_ass + self.name)
+            os.makedirs(raw_ass +self.name)
         self.success_ks = [int(f.split("_")[1]) for f in os.listdir(raw_ass + self.name) if "ray" in f]
+        self.out_dir = raw_ass + self.name + "/"
+        self.merge_dir = raw_ass + self.name + "/merged/" 
         if not os.path.exists(self.out_dir):
             os.makedirs(self.out_dir)
-        if not os.path.exists(self.clean_dir):
-            os.makedirs(self.clean_dir)
         if os.path.exists(self.out_dir + self.name + "_stats.json"):
             print "Loading stats for", self.name
             with open(self.out_dir + self.name + "_stats.json") as handle:
@@ -177,21 +108,17 @@ class Assembly(object):
          
 
     def run(self):
+        self.script = raw_slurm % ( self.out_dir, self.name, str(self.k), self.out_dir, self.out_dir)
         if not self.coass:
-            cleans =  ["sickle pe -f " + self.dir + p[0][0] + " -r " + self.dir + p[0][1] + " -t sanger -n -o " + self.clean_dir + p[1][0] + " -p " + self.clean_dir + p[1][1] + " -s " +  self.clean_dir + p[2] +"\n" for p in zip(self.pairs, self.cleans, self.singles)]
-            self.arg =  sum([sum([["-p "],[self.clean_dir + r for r in p]],[]) for p in self.cleans],[])
+            cleans = "sickle se -f " + self.reads + " -t illumina -n -o " + self.reads.replace("fastq.gz","clean.fastq") +"\n" if not os.path.exists(self.reads.replace(".fastq.gz",".clean.fastq")) else ""
+            self.arg = self.reads.replace("fastq.gz","clean.fastq")
             self.script = raw_slurm % ( self.out_dir, self.name, str(self.k), self.out_dir, self.out_dir)
-        else :
-            self.arg =  sum([sum([["-p "],[r for r in p]],[]) for p in self.cleans],[])
-            self.script = raw_slurm % ( self.out_dir, self.name, str(self.k), self.out_dir, self.out_dir)
-            
-        if not self.coass :
-            self.script = self.script + "if [ ! -e " + self.clean_dir + self.singles[0] + " ]\nthen\n"
             for c in cleans:
                 self.script = self.script + c
-            self.script = self.script + "fi"
+        else :
+            self.arg = " ".join([" -s " + r.replace("fastq.gz","clean.fastq") for r in self.reads])
 
-        self.script = self.script + raw_ray % (self.out_dir, self.out_dir + "ray", " ".join(self.arg), self.out_dir, self.out_dir + "slurm_script.sh")
+        self.script = self.script + raw_ray % (self.out_dir, self.out_dir + "ray", self.arg, self.out_dir, self.out_dir + "slurm_script.sh")
         with open(self.out_dir + "current_k.txt","w") as handle:
             handle.writelines([str(self.k)])                    
         with open(self.out_dir + "slurm_script.sh","w") as handle:
@@ -200,14 +127,14 @@ class Assembly(object):
 
     def make_stats(self, rerun = False):
         self.stats = {}
-        if os.path.exists(self.out_dir + "mapper/"):
+        if True: #os.path.exists(self.out_dir + "mapper/"):
             if os.path.exists(self.out_dir + self.name + "_stats.json") and not rerun:
                 print "Loading stats for", self.name
                 with open(self.out_dir + self.name + "_stats.json") as handle:
                     self.stats = json.load(handle)
             else:
                 print "Computing stats for", self.name
-                self.stats['raw_reads'] = self.pairs
+                self.stats['raw_reads'] = self.reads
                 self.stats['output'] = self.out_dir
                 print "Computing raw number of paired-reads"
                 self.stats['read_count'] = int(sh.zgrep("-Ec", "$", self.reads))/4 
@@ -220,7 +147,7 @@ class Assembly(object):
                     if self.stats[k]['Success']:
                         t=sh.assemstats(0,self.out_dir + "ray_" + str(k) + "/Contigs.fasta" )
                         self.stats[k]['Assembly'] = {a:b for a,b in  zip(*[[w.strip() for w in  l.split("\t")][1:] for l in str(t).split("\n")[0:2]])}
-                        self.stats[k]['mapped_frac'] = float(sh.grep("overall",  self.out_dir + "map_" + str(k) + ".err").split(" ")[0][0:-1])/100
+                        self.stats[k]['mapped_frac'] = float(sh.grep("overall",  self.out_dir + "mapper_" + str(k) + "/map.err").split(" ")[0][0:-1])/100
                         self.stats[k]['dupli_frac'] = float(sh.grep("Unknown", self.out_dir + "mapper/ray_" +str(k)+ "_" + self.name+ "-smd.metrics").split("\t")[7])
             
         with open(self.out_dir + self.name + "_stats.json", 'w') as handle:
@@ -232,14 +159,13 @@ class Assembly(object):
                     
     def map_merged(self):
         if os.path.exists(self.merge_dir + "454AllContigs.fna"):
-            f_heads = [os.path.dirname(a[0]) + "/" + "_".join(os.path.basename(a[0]).split("_")[:-2]) for a in self.cleans]
-            slurm_header = raw_map_slurm % ( self.merge_dir , self.name, "merged", self.merge_dir, self.merge_dir)
-            mapper_cmd = raw_map % (self.merge_dir + "454AllContigs.fna" ,  self.merge_dir + "454AllContigs.fna", " ".join(f_heads), " ".join([os.path.basename(f) for f in f_heads]) )
+            slurm_header = raw_map_slurm % ( self.out_dir, self.name, "merged", self.merge_dir, self.merge_dir)
+            mapper_cmd = raw_map % (self.reads, self.name, self.merge_dir + "454AllContigs.fna" , "merged", self.merge_dir + "mapper/")
             self.map_script = slurm_header + mapper_cmd
         
             with open(self.merge_dir +  "map_slurm_script.sh","w") as handle:
                 handle.writelines(self.map_script)
-#            sh.sbatch(self.merge_dir + "map_slurm_script.sh")
+            sh.sbatch(self.merge_dir + "map_slurm_script.sh")
             print "Launched mapper for", self.name, "with merged assembly"
 
     def map(self,k):
@@ -257,6 +183,9 @@ class Assembly(object):
             print "Launched mapper for", self.name, "with k-mer size", k
 
     def map2ref(self,ref):
+        if not os.path.exists( self.out_dir + "mapper_" + "2ref" + "/"):
+            os.makedirs( self.out_dir + "mapper_" + "2ref" + "/")
+            
         slurm_header = raw_map_slurm % ( self.out_dir, self.name, "2ref", self.out_dir + "mapper_" + "2ref" + "/", self.out_dir + "mapper_" + "2ref" + "/")
         mapper_cmd = raw_map % (self.reads, self.name, ref, "ray_" + "2ref", self.out_dir + "mapper_" + "2ref" + "/")
         self.map_script = slurm_header + mapper_cmd
@@ -293,47 +222,105 @@ class Assembly(object):
         header = raw_newbler_slurm % ( self.merge_dir, self.name, self.merge_dir, self.merge_dir)
         with open(self.merge_dir + "merge_slurm_script.sh","w") as handle:
             handle.writelines(header + newbler)
-    #        sh.sbatch(self.merge_dir + "merge_slurm_script.sh")
+        sh.sbatch(self.merge_dir + "merge_slurm_script.sh")
 
-    def concoct_the_hell(self):
-        if not os.path.exists(self.merge_dir + "/concoct/" ) : os.makedirs(self.merge_dir + "/concoct/")
-        script = raw_concoct_slurm % (self.merge_dir + "/concoct/" , self.name ,self.merge_dir + "/concoct/", self.merge_dir + "/concoct/")
-        script += raw_concoct % (stats_out + self.name +"_contig_coverages_for_concoct.csv",self.merge_dir + "/454AllContigs.fna", 1000, self.merge_dir  + "/concoct/")
-        with open(self.merge_dir + "concoct/" + "concoct_slurm_script.sh","w") as handle:
-            handle.writelines(script)
-    #        sh.sbatch(merge_dir  + "/concoct/" + "concoct_slurm_script.sh")
+def run_all():
+    asses = [Assembly(p.replace(".fastq.gz","")) for p in os.listdir(raw_path) if ".fastq.gz" in p and not "clean" in p]
+    for a in asses:
+        a.run()
 
-    def compile_contig_matrices(self):
-        fs = sh.find(self.merge_dir, "-name", "*-smds.coverage.percontig").stdout.split("\n")[:-1]
+def merge_all():
+    asses = [Assembly(p.replace(".fastq.gz","")) for p in os.listdir(raw_path) if ".fastq.gz" in p and not "clean" in p]
+    for a in asses:
+        a.merge()
 
-        df = DataFrame.from_csv(fs[0],sep="\t")
-        glob = df.ix[:,0:2]
-        for f in fs:
-            id = [c.replace("map_","") for c in f.split("/") if "map_" in c][0]
-            values =  DataFrame.from_csv(f,sep="\t")["cov_mean_sample_0"]
-            assert sum([a!=b for a,b in zip(values.index, glob.index)]) == 0
-            if sum([a!=b for a,b in zip(values.index, glob.index)]) == 0:
-                glob[id] = values
-            else:
-                print f, "is weird"
+                
+def map_all_singles():
+    asses = [Assembly(p.replace(".fastq.gz","")) for p in os.listdir(raw_path) if ".fastq.gz" in p and not "clean" in p]
+    for a in asses:
+        a.map_all()
 
-        samples = list(set([c.split("_")[2] for c in mat.columns if "EUSM" in c]))
-        processed = {}
-        processed['length'] = glob['length']
-        processed['GC'] = glob['GC']
-        for s in tqdm(samples):
-            processed[s]=  glob[[c for c in glob.columns if s in c]].apply(sum, axis=1)
-        glob = DataFrame.from_dict(processed)
-        glob.to_csv(stats_out  + self.name + "_contig_coverages.csv",sep="\t")
-        glob[samples].to_csv(stats_out  + self.name + "_contig_coverages_for_concoct.csv",sep="\t")
-        return glob
+def map_all_merged():
+    asses = [Assembly(p.replace(".fastq.gz","")) for p in os.listdir(raw_path) if ".fastq.gz" in p and not "clean" in p]
+    for a in asses:
+        a.map_merged()
 
-    def hmmer_the_hell(self):
-#        fs = sh.find(self.merge_dir + "bins/annotations/", "-name", "*.faa").stdout.split("\n")[:-1]
-        script = raw_hmm_pipe  % (self.merge_dir, self.merge_dir,self.merge_dir, self.merge_dir, self.merge_dir, self.merge_dir)
-        with open(self.merge_dir + "hmmer_slurm_script.sh","w") as handle:
-            handle.writelines(script)
-    #        sh.sbatch(merge_dir  + "/concoct/" + "concoct_slurm_script.sh")
+def merge_final():
+    asses = [Assembly(p.replace(".fastq.gz","")) for p in os.listdir(raw_path) if ".fastq.gz" in p and not "clean" in p]
+    fastas = [ass.merge_dir + "454AllContigs.fna" for ass in asses]
+    if not os.path.exists(merged_ass) : os.makedirs(merged_ass)
+    in_size = sum([os.stat(f).st_size for f in fastas])
+    newbler = raw_newbler % (merged_ass, " ".join(fastas))
+    header = raw_newbler_slurm % ( merged_ass,"merged_all", merged_ass,merged_ass)
+    with open(merged_ass + "merge_slurm_script.sh","w") as handle:
+        handle.writelines(header + newbler)
+    sh.sbatch(merged_ass + "merge_slurm_script.sh")
+
+def map_final():
+    asses = [Assembly(p.replace(".fastq.gz","")) for p in os.listdir(raw_path) if ".fastq.gz" in p and not "clean" in p]
+    for a in asses:
+        a.map2ref(merged_ass +"454AllContigs.fna")
+
+def compile_contig_matrices():
+    fs = sh.find(raw_ass, "-name", "*-smds.coverage.percontig").stdout.split("\n")[:-1]
+    fs = [f for f in fs if "_2ref" in f]
+    df = DataFrame.from_csv(fs[0],sep="\t")
+    glob = df.ix[:,0:2]
+    for f in fs:
+        id = [c for c in f.split("/") if "IH" in c][0]
+        values =  DataFrame.from_csv(f,sep="\t")["cov_mean_sample_0"]
+        assert sum([a!=b for a,b in zip(values.index, glob.index)]) == 0
+        if sum([a!=b for a,b in zip(values.index, glob.index)]) == 0:
+            glob[id] = values
+        else:
+            print f, "is weird"
+    glob.to_csv(stats_out  + "all_contig_coverages.csv",sep="\t")
+    
+
+def write_lib_stats(assemblies):
+    header = "\traw number of read-pairs\tqc-ed number of read-pairs\tpercentage of clean reads"
+    lines = [[header]]+[a.format_lib_stats() for a in assemblies]
+    lines = sum(lines, [])
+    lines = [l+"\n" for l in lines]
+    with open(stats_out + "library_stats.csv","w") as handle:
+        handle.writelines(lines)
+    return lines
+
+def write_assembly_stats(assemblies):
+    header = "sample\tk-mer size\tassembly size\tnumber of contigs\tmax contig length\tn50 length\tproportion of duplicated reads\tproportion of successfuly mapped reads\tassembly path"
+    lines = [header]+[a.format_assem_stats() for a in assemblies]
+    lines = [l+"\n" for l in lines]
+    with open(stats_out + "assemblies_stats.csv","w") as handle:
+        handle.writelines(lines)
+    return lines
+    
+def write_merged_stats(samples):
+    header = "assembly size\tnumber of contigs\tmax contig length\tn50 length\tassembly path"
+    lines = [header]
+    ff = lambda x :  str(round(float(x)/1000000,2))+"M"
+    pp = lambda x :  str(int(x*100))+"%"
+    kk = lambda x :  str(round(float(x)/1000,2))+"k"
+
+    for s in samples:
+        t=sh.assemstats(0, merged_ass + s + "/454AllContigs.fna")
+        stats = {a:b for a,b in  zip(*[[w.strip() for w in  l.split("\t")][1:] for l in str(t).split("\n")[0:2]])}
+        lines.append("\t".join([s,ff(stats['sum']), ff(stats['n']), kk(stats['max']),kk(stats['n50_len']), merged_ass + s + "/454AllContigs.fna"]))
+    lines = [l+"\n" for l in lines]
+
+    with open(stats_out + "merged_assemblies_stats.csv","w") as handle:
+        handle.writelines(lines)
+    return lines
+
+all_2007_asses = ["IHXI","IHWF","IHUS","IHWI","IHWN","IHWG","IHWH","IHUZ","IHSA","IHWA","IHWY","IHWB","IHWU","IHXG","IHXO","IHXN","IHXW"]
+all_2008_asses = ["IHPY","IHSB","IHWS","IHWX","IHWW","IHXP","IHXT","IHXH","IHXA","IHXF","IHXU","IHXS","IHXX","IHPO","IHWP","IHPN"]
+all_2009_asses = ["IHWT","IHTZ","IHXY","IHUN","IHUO","IHUP","IHUA","IHUB","IHUC","IHUH","IHUI","IHUF"]
+#all_31_asses =   [Assembly(sam, samples[sam],k=31)  for sam in samples]
+#all_41_asses =   [Assembly(sam, samples[sam],k=41)  for sam in samples]
+#all_51_asses =   [Assembly(sam, samples[sam],k=51)  for sam in samples]
+            
+#frac_0p1 = [ass for ass in all_31_asses + all_41_asses + all_51_asses if ass.name in [k for k,v in samples.iteritems() if v['fraction'] == 0.1]]
+#frac_0p8 = [ass for ass in all_31_asses + all_41_asses + all_51_asses if ass.name in [k for k,v in samples.iteritems() if v['fraction'] == 0.8]]
+#frac_3p0 = [ass for ass in all_31_asses + all_41_asses + all_51_asses if ass.name in [k for k,v in samples.iteritems() if v['fraction'] == 3.0]]
 
 
-ass = Assembly([p for p in os.listdir(raw_path) if "_d" in p], name_coass="_all")
+#all_asses = all_31_asses + all_41_asses + all_51_asses
