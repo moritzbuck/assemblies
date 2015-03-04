@@ -1,0 +1,13 @@
+{
+	"name"		:	"CAMI_HC",
+	"out_path"	:	"/home/moritz/b2011105/Moritz/CAMI/HC/",
+	"samples"	:	
+	{	
+		"CAMI_HC_S001" : {"reads" :	[{	"I"	:	"/home/moritz/glob/data/cami/CAMI_HC/H_S001__insert_180_reads_anonymous.fq.gz"	}	]	}, 
+		"CAMI_HC_S002" : {"reads" :	[{	"I"	:	"/home/moritz/glob/data/cami/CAMI_HC/H_S002__insert_180_reads_anonymous.fq.gz"	}	]	}, 
+		"CAMI_HC_S003" : {"reads" :	[{	"I"	:	"/home/moritz/glob/data/cami/CAMI_HC/H_S003__insert_180_reads_anonymous.fq.gz"	}	]	}, 
+		"CAMI_HC_S004" : {"reads" :	[{	"I"	:	"/home/moritz/glob/data/cami/CAMI_HC/H_S004__insert_180_reads_anonymous.fq.gz"	}	]	}, 
+		"CAMI_HC_S005" : {"reads" :	[{	"I"	:	"/home/moritz/glob/data/cami/CAMI_HC/H_S005__insert_180_reads_anonymous.fq.gz"	}	]	} 
+	}
+}
+
