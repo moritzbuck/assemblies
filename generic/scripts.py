@@ -64,14 +64,25 @@ nr_threads = 16
 executable = 'Ray231'
 
 
-def make_parallel_sickle_script(inreads, outreads, paired, threads = 16):
-    if paired :
-        raw = "parallel --xapply -j %i sickle  pe -t sanger -f {1} -r {2} -o {3} -p {4} -s {5} ::: %s ::: %s ::: %s ::: %s ::: %s"
-        raw = raw % (threads, " ".join(inreads[0]), " ".join(inreads[1]), " ".join(outreads[0]), " ".join(outreads[1]), " ".join(outreads[3]))
-    else :
-        raw = "parallel --xapply -j %i sickle  se -t sanger -f {1} -o {2} ::: %s ::: %s"
-        raw = raw % (threads, " ".join(inreads[0]), " ".join(outreads[0]))
-    return raw
+def make_parallel_sickle_script(library_list, threads = 16):
+        interleaved =  [l for l in library_list if l.has_key('I')]
+        paired = [l for l in library_list if l.has_key('1')]
+        singles = [l for l in library_list if l.has_key('U')]
+
+        raw = ""
+        
+        if len(interleaved) > 0 :
+            raw += "\nparallel --xapply -j %i  split-paired-reads.py {1} ::: %s " %  (threads, " ".join([p['I'] for p in interleaved]))
+            raw += "\nparallel --xapply -j %i sickle  pe -t sanger -f {1} -r {2} -o {3} -p {4} -s {5} ::: %s :::  %s ::: %s ::: %s ::: %s" % (threads, " ".join([os.path.basename(p['I']) + ".1" for p in interleaved]), " ".join([os.path.basename(p['I']) +".2" for p in interleaved]), " ".join([p['c1'] for p in interleaved]), " ".join([p['c2'] for p in interleaved]), " ".join([p['cU'] for p in interleaved]))
+            raw += "\nparallel --xapply -j %i  rm {1} ::: %s " %  (threads, " ".join([os.path.basename(p['I']) +".1" for p in interleaved] + [os.path.basename(p['I']) + ".2" for p in interleaved]))
+            
+        if len(paired) > 0 :
+            raw += "\nparallel --xapply -j %i sickle  pe -t sanger -f {1} -r {2} -o {3} -p {4} -s {5} ::: %s ::: %s ::: %s ::: %s ::: %s" % (threads, " ".join([p['1'] for p in paired]), " ".join([p['2'] for p in paired]), " ".join([p['c1'] for p in paired]), " ".join([p['c2'] for p in paired]), " ".join([p['cU'] for p in paired]))
+            
+        if len(singles) > 0 :
+            raw += "\nparallel --xapply -j %i sickle  se -t sanger -f {1} -o {2} ::: %s ::: %s" % (threads, " ".join([p['U'] for p in singles]), " ".join([p['cU'] for p in singles]))
+            
+        return raw
 
 def make_megahit_script(inreads, outfolder, mem = 500e9, max_read_len = 290):
     raw = """
@@ -124,7 +135,7 @@ def make_mapping_script(infasta, path, sample_dictionary, only_bowtie = True, re
         if not os.path.exists(infasta + ".fai"):
             script += "samtools faidx %s\n" % (infasta)
         sample_names = " ".join(sample_dictionary.keys())
-        script += "parallel --xapply -j %d samtools view %s %s{1}/{1}_map.sam '>' %s{1}/{1}_map.bam ::: %s\n" %( threads, infasta, path, path, sample_names)
+        script += "parallel --xapply -j %d samtools view -bT %s %s{1}/{1}_map.sam '>' %s{1}/{1}_map.bam ::: %s\n" %( threads, infasta, path, path, sample_names)
         script += "parallel --xapply -j %d samtools sort %s{1}/{1}_map.bam %s{1}/{1}_map_sorted ::: %s\n" %( threads, path, path, sample_names)
         script += "parallel --xapply -j %d samtools index %s{1}/{1}_map_sorted.bam ::: %s\n" %( threads, path, sample_names)
 
@@ -143,8 +154,35 @@ def make_mapping_script(infasta, path, sample_dictionary, only_bowtie = True, re
 
             final_bam = "_map_no_dups_sorted.bam"
 
-        script += "parallel --xapply -j %d genomeCoverageBed -d -ibam  %s{1}/{1}%s '>' %s{1}/{1}.coverage ::: %s\n" %( threads, path, final_bam, path, sample_names)
+        script += "parallel --xapply -j %d genomeCoverageBed -ibam  %s{1}/{1}%s '>' %s{1}/{1}.coverage ::: %s\n" %( threads, path, final_bam, path, sample_names)
         script += "parallel --xapply -j %d python $METASSEMBLE_DIR/scripts/validate/map/gen_contig_cov_per_bam_table.py --isbedfiles %s %s{1}/{1}.coverage '>' %s{1}/{1}.coverage.percontig ::: %s\n" %( threads, infasta, path, path, sample_names)
-            
+        script += "\ncd %s\ncut -f1,2,3  %s/*.percontig  > tmp.txt" % (path,sample_names.split()[0])
+        script += "\nfor l in `ls  %s`; do  cut -f4  $l | paste tmp.txt - > tmp2.txt; mv tmp2.txt tmp.txt ; done" %("/*.percontig ".join(sample_names.split()))
+        script += """
+echo "%s" >  %s/mapping.tsv
+tail -n +2 tmp2.txt >>  %s/mapping.tsv
+rm tmp2.txt
+""" % ("\t".join(["contig", "length", "GC"] + sample_names.split()), path, path)
+
     
     return script
+
+def make_concoct_script(covfile, infasta, path, cutoff = 1000, kmer = 4, max_bins = 400):
+
+    script = """
+cut -f1,4- %s > tmp
+concoct --coverage_file  tmp  --composition_file %s -k %i -l %i -b %s -c %i --no_total_coverage
+rm tmp
+""" %(covfile, infasta, kmer, cutoff, path + "concoct_%i_kmer_%i/" %(cutoff, kmer), max_bins)
+    return script
+
+
+def make_bin_bmfa(infasta, path, name, threads = 16, coverages = None, hmmdb="~/glob/data/pfam/Pfam-A.hmm"):
+    raw = """module load hmmer"""
+    raw += """\nprokka --outdir %s/prokka/ --cpus %i --locustag %s --force %s""" % (path, threads, name, infasta)
+    raw += """\nhmmsearch --cpu %d %s %s > %s""" % (threads, hmmdb, infasta, path + os.path.basename(hmmdb) +".raw")
+    raw += """\ncheckm lineage_wf -t %i -x fna %s/prokka  %s/checkm > %scheckm.txt""" % (threads, path, path, path)
+    return raw
+
+
+

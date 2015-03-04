@@ -3,83 +3,44 @@
 	"out_path"	:	"/home/moritz/b2011138/TroutBogHypo/assemblies/",
 	"samples"	:	
 	{	
-		"IHXI" : {	"date" :	"2007-05-28" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHXI.fastq.gz"]]}, 
-		"IHWF" : {	"date" :	"2007-06-07" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHWF.fastq.gz"]]}, 
-		"IHUS" : {	"date" :	"2007-06-13" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHUS.fastq.gz"]]}, 
-		"IHWI" : {	"date" :	"2007-06-27" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHWI.fastq.gz"]]}, 
-		"IHWN" : {	"date" :	"2007-07-02" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHWN.fastq.gz"]]}, 
-		"IHWG" : {	"date" :	"2007-07-12" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHWG.fastq.gz"]]}, 
-		"IHWH" : {	"date" :	"2007-07-25" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHWH.fastq.gz"]]}, 
-		"IHUZ" : {	"date" :	"2007-07-31" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHUZ.fastq.gz"]]}, 
-		"IHSA" : {	"date" :	"2007-08-09" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHSA.fastq.gz"]]}, 
-		"IHWA" : {	"date" :	"2007-08-20" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHWA.fastq.gz"]]}, 
-		"IHWY" : {	"date" :	"2007-08-27" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHWY.fastq.gz"]]}, 
-		"IHWB" : {	"date" :	"2007-09-10" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHWB.fastq.gz"]]}, 
-		"IHWU" : {	"date" :	"2007-09-17" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHWU.fastq.gz"]]}, 
-		"IHXG" : {	"date" :	"2007-10-01" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHXG.fastq.gz"]]}, 
-		"IHXO" : {	"date" :	"2007-10-16" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHXO.fastq.gz"]]}, 
-		"IHXN" : {	"date" :	"2007-11-05" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHXN.fastq.gz"]]}, 
-		"IHPY" : {	"date" :	"2008-05-22" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHPY.fastq.gz"]]}, 
-		"IHSB" : {	"date" :	"2008-05-29" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHSB.fastq.gz"]]}, 
-		"IHWS" : {	"date" :	"2008-06-13" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHWS.fastq.gz"]]}, 
-		"IHWW" : {	"date" :	"2008-07-08" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHWW.fastq.gz"]]}, 
-		"IHXP" : {	"date" :	"2008-07-15" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHXP.fastq.gz"]]}, 
-		"IHXT" : {	"date" :	"2008-07-22" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHXT.fastq.gz"]]}, 
-		"IHXH" : {	"date" :	"2008-07-29" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHXH.fastq.gz"]]}, 
-		"IHXA" : {	"date" :	"2008-08-05" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHXA.fastq.gz"]]}, 
-		"IHXF" : {	"date" :	"2008-08-12" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHXF.fastq.gz"]]}, 
-		"IHXS" : {	"date" :	"2008-08-25" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHXS.fastq.gz"]]}, 
-		"IHPO" : {	"date" :	"2008-09-20" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHPO.fastq.gz"]]}, 
-		"IHPN" : {	"date" :	"2008-10-23" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHPN.fastq.gz"]]}, 
-		"IHWT" : {	"date" :	"2009-05-29" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHWT.fastq.gz"]]}, 
-		"IHTZ" : {	"date" :	"2009-06-03" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHTZ.fastq.gz"]]}, 
-		"IHUN" : {	"date" :	"2009-06-23" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHUN.fastq.gz"]]}, 
-		"IHUO" : {	"date" :	"2009-06-29" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHUO.fastq.gz"]]}, 
-		"IHUP" : {	"date" :	"2009-07-07" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHUP.fastq.gz"]]}, 
-		"IHUA" : {	"date" :	"2009-07-13" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHUA.fastq.gz"]]}, 
-		"IHUB" : {	"date" :	"2009-07-21" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHUB.fastq.gz"]]}, 
-		"IHUC" : {	"date" :	"2009-07-27" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHUC.fastq.gz"]]}, 
-		"IHUH" : {	"date" :	"2009-08-03" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHUH.fastq.gz"]]}, 
-		"IHUI" : {	"date" :	"2009-08-11" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHUI.fastq.gz"]]}, 
-		"IHUF" : {	"date" :	"2009-08-18" ,	"reads" : [["/pica/v3/b2011138/TroutBogHypo/IHUF.fastq.gz"]]}
+		"IHXI" : {	"date" :	"2007-05-28" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHXI.fastq.gz" }]}, 
+		"IHWF" : {	"date" :	"2007-06-07" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHWF.fastq.gz" }]}, 
+		"IHUS" : {	"date" :	"2007-06-13" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHUS.fastq.gz" }]}, 
+		"IHWI" : {	"date" :	"2007-06-27" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHWI.fastq.gz" }]}, 
+		"IHWN" : {	"date" :	"2007-07-02" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHWN.fastq.gz" }]}, 
+		"IHWG" : {	"date" :	"2007-07-12" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHWG.fastq.gz" }]}, 
+		"IHWH" : {	"date" :	"2007-07-25" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHWH.fastq.gz" }]}, 
+		"IHUZ" : {	"date" :	"2007-07-31" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHUZ.fastq.gz" }]}, 
+		"IHSA" : {	"date" :	"2007-08-09" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHSA.fastq.gz" }]}, 
+		"IHWA" : {	"date" :	"2007-08-20" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHWA.fastq.gz" }]}, 
+		"IHWY" : {	"date" :	"2007-08-27" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHWY.fastq.gz" }]}, 
+		"IHWB" : {	"date" :	"2007-09-10" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHWB.fastq.gz" }]}, 
+		"IHWU" : {	"date" :	"2007-09-17" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHWU.fastq.gz" }]}, 
+		"IHXG" : {	"date" :	"2007-10-01" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHXG.fastq.gz" }]}, 
+		"IHXO" : {	"date" :	"2007-10-16" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHXO.fastq.gz" }]}, 
+		"IHXN" : {	"date" :	"2007-11-05" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHXN.fastq.gz" }]}, 
+		"IHPY" : {	"date" :	"2008-05-22" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHPY.fastq.gz" }]}, 
+		"IHSB" : {	"date" :	"2008-05-29" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHSB.fastq.gz" }]}, 
+		"IHWS" : {	"date" :	"2008-06-13" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHWS.fastq.gz" }]}, 
+		"IHWW" : {	"date" :	"2008-07-08" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHWW.fastq.gz" }]}, 
+		"IHXP" : {	"date" :	"2008-07-15" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHXP.fastq.gz" }]}, 
+		"IHXT" : {	"date" :	"2008-07-22" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHXT.fastq.gz" }]}, 
+		"IHXH" : {	"date" :	"2008-07-29" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHXH.fastq.gz" }]}, 
+		"IHXA" : {	"date" :	"2008-08-05" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHXA.fastq.gz" }]}, 
+		"IHXF" : {	"date" :	"2008-08-12" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHXF.fastq.gz" }]}, 
+		"IHXS" : {	"date" :	"2008-08-25" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHXS.fastq.gz" }]}, 
+		"IHPO" : {	"date" :	"2008-09-20" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHPO.fastq.gz" }]}, 
+		"IHPN" : {	"date" :	"2008-10-23" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHPN.fastq.gz" }]}, 
+		"IHWT" : {	"date" :	"2009-05-29" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHWT.fastq.gz" }]}, 
+		"IHTZ" : {	"date" :	"2009-06-03" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHTZ.fastq.gz" }]}, 
+		"IHUN" : {	"date" :	"2009-06-23" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHUN.fastq.gz" }]}, 
+		"IHUO" : {	"date" :	"2009-06-29" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHUO.fastq.gz" }]}, 
+		"IHUP" : {	"date" :	"2009-07-07" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHUP.fastq.gz" }]}, 
+		"IHUA" : {	"date" :	"2009-07-13" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHUA.fastq.gz" }]}, 
+		"IHUB" : {	"date" :	"2009-07-21" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHUB.fastq.gz" }]}, 
+		"IHUC" : {	"date" :	"2009-07-27" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHUC.fastq.gz" }]}, 
+		"IHUH" : {	"date" :	"2009-08-03" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHUH.fastq.gz" }]}, 
+		"IHUI" : {	"date" :	"2009-08-11" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHUI.fastq.gz" }]}, 
+		"IHUF" : {	"date" :	"2009-08-18" ,	"reads" : [{ "U"	:	"/pica/v3/b2011138/TroutBogHypo/IHUF.fastq.gz" }]}
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

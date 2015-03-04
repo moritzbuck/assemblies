@@ -16,8 +16,6 @@ class Sample(object):
         self.name = name
         self.reads = reads
         
-        assert len([os.path.basename(r) for r in sum(self.reads, [])]) == len(set([os.path.basename(r) for r in sum(self.reads, [])])), "Don' t make my life a pain, and name your fastq with distinct names..."
-        
         self.path = path + self.name + "/"
         self.metadata = metadata
         self.clean_path = self.path + "clean/"
@@ -25,35 +23,63 @@ class Sample(object):
         if not os.path.exists(self.clean_path):
             os.makedirs(self.clean_path)
 
+    def get_libraries(self):
+        pairs = [p for p in self.reads if p.has_key('1')]
+        interlaced = [p for p in self.reads if p.has_key('I')]
+        singles = [p for p in self.reads if p.has_key('U')]
+        all_libs = []
+        all_libs += [{'1' : p['1'], '2' : p['2'], 'c1' : self.clean_path + "clean_fwd_" + os.path.basename(p['1']).replace(".gz",""), 'c2' : self.clean_path + "clean_rev_" + os.path.basename(p['2']).replace(".gz",""), 'cU' : self.clean_path + "clean_unp_" + os.path.basename(p['1']).replace(".gz","") } for p in pairs]
+        all_libs += [{'I' : p['I'], 'c1' : self.clean_path + "clean_fwd_" + os.path.basename(p['I']).replace(".gz",""), 'c2' : self.clean_path + "clean_rev_" + os.path.basename(p['I']).replace(".gz",""), 'cU' : self.clean_path + "clean_unp_" + os.path.basename(p['I']).replace(".gz","") } for p in interlaced]
+        all_libs += [{'U' :  p['U'],  'cU' : self.clean_path + "clean_unp_" + os.path.basename(p['U']).replace(".gz","")} for p in singles]
+        return all_libs
+        
 
     def get_pairs(self, clean = True):
-        pairs = [p for p in self.reads if len(p) == 2]
+        pairs = [p for p in self.reads if p.has_key('1')]
+        interlaced = [p for p in self.reads if p.has_key('I')]
         if clean:
-            fwd = [self.clean_path + os.path.basename(p[0]).replace(".gz","") for p in pairs]
-            rev = [self.clean_path + os.path.basename(p[1]).replace(".gz","") for p in pairs]
-            single = [self.clean_path + "single_" + os.path.basename(p[0]).replace(".gz","") for p in pairs]
-            return (rev, fwd, single)
+            fwd = [self.clean_path + "clean_fwd_" + os.path.basename(p['1']).replace(".gz","") for p in pairs]
+            rev = [self.clean_path + "clean_rev_" + os.path.basename(p['2']).replace(".gz","") for p in pairs]
+            fwd += [self.clean_path + "clean_fwd_" + os.path.basename(p['I']).replace(".gz","") for p in interlaced]
+            rev += [self.clean_path + "clean_rev_" + os.path.basename(p['I']).replace(".gz","") for p in interlaced]
+            return {'1' : fwd, '2' : rev}
         else :
-            fwd = [p[0] for p in pairs]
-            rev = [p[1] for p in pairs]
-            return (rev, fwd)
+            fwd = [p['1'] for p in pairs]
+            rev = [p['2'] for p in pairs]
+            inl = [p['I'] for p in interlaced]
+            return {'1' : fwd, '2' : rev, 'I': inl}
 
     def get_singles(self, clean = True):
-        pairs = [p for p in self.reads if len(p) == 2]
-        singles = [p for p in self.reads if len(p) == 1]
+        pairs = [p for p in self.reads if p.has_key('1')]
+        inls = [p for p in self.reads if p.has_key('I')]
+        singles = [p for p in self.reads if p.has_key('U')]
         if clean:
-            single = [self.clean_path + os.path.basename(p[0]).replace(".gz","") for p in singles]
-            single_pairs = [self.clean_path + "single_" + os.path.basename(p[0]).replace(".gz","") for p in pairs]
-            return (single, single_pairs)
+            single = [self.clean_path + "clean_unp_" + os.path.basename(p['U']).replace(".gz","") for p in singles]
+            single_pairs = [self.clean_path + "clean_unp_" + os.path.basename(p['1']).replace(".gz","") for p in pairs]
+            single_inls = [self.clean_path + "clean_unp_" + os.path.basename(p['I']).replace(".gz","") for p in inls]
+            return { 'U' : single, '1': single_pairs, 'I' : single_inls}
         else :
-            single = [p[0] for p in singles]
-            return (single, [])
+            single = [p['U'] for p in singles]
+            return {'U': single}
 
     def get_all_reads(self, clean = True):
-        all_reads = sum(self.reads,[])
+        pairs = [p for p in self.reads if p.has_key('1')]
+        interlaced = [p for p in self.reads if p.has_key('I')]
+        singles = [p for p in self.reads if p.has_key('U')]
+        all_reads = []
         if clean:
-            all_reads = [self.clean_path + os.path.basename(p).replace(".gz","") for p in all_reads]
-        return all_reads
+            all_reads += [self.clean_path + "clean_fwd_" + os.path.basename(p['1']).replace(".gz","") for p in pairs]
+            all_reads += [self.clean_path + "clean_rev_" + os.path.basename(p['2']).replace(".gz","") for p in pairs]
+            all_reads += [self.clean_path + "clean_fwd_" + os.path.basename(p['I']).replace(".gz","") for p in interlaced]
+            all_reads += [self.clean_path + "clean_rev_" + os.path.basename(p['I']).replace(".gz","") for p in interlaced]
+            all_reads += [self.clean_path + "clean_unp_" + os.path.basename(p['U']).replace(".gz","") for p in singles]
+            all_reads += [self.clean_path + "clean_unp_" + os.path.basename(p['1']).replace(".gz","") for p in pairs]
+            all_reads += [self.clean_path + "clean_unp_" + os.path.basename(p['I']).replace(".gz","") for p in interlaced]
+            return all_reads
+        else :
+            all_reads = sum([r.values() for r in self.reads],[])
+            return all_reads
+
                 
 
 class Assembly(object):
@@ -117,24 +143,17 @@ class Assembly(object):
             unpaired = s.get_singles()
  
             sample_dict[s.name] = {}
-            sample_dict[s.name]['1'] = paired[0]
-            sample_dict[s.name]['2'] = paired[1]
-            sample_dict[s.name]['U'] = unpaired[0] + unpaired[1]
+            sample_dict[s.name]['1'] = paired['1']
+            sample_dict[s.name]['2'] = paired['2']
+            sample_dict[s.name]['U'] = sum(unpaired.values(),[])
         return  sample_dict
     
     def clean_all(self, submit = False):
         script = make_slurm_header(self.sample_path, "clean_all", self.project)
+
+        libraries = sum([s.get_libraries() for s in self.samples], [])
         
-        singles_in = self.get_all_reads( clean = False, kind = "single" )
-        singles_out = self.get_all_reads( clean = True, kind = "single" )
-        pairs_in = self.get_all_reads( clean = False, kind = "paired" )
-        pairs_out = self.get_all_reads( clean = True, kind = "paired" )
-
-        if len(singles_in) >0 :
-            script += make_parallel_sickle_script(singles_in, singles_out, paired=False)
-
-        if len(pairs_in[0]) >0 :
-            script += make_parallel_sickle_script(pairs_in, pairs_out, paired=True)
+        script += make_parallel_sickle_script(libraries)
 
         with open(self.sample_path +  "clean_all_script.sh","w") as handle:
             handle.writelines(script)
@@ -201,6 +220,23 @@ class Assembly(object):
             with open(self.job_file, 'w') as handle:
                 json.dump(self.job_ids, handle)
 
+    def map_binannot(self, infasta, name, submit = False, deps = None):
+        path = os.path.dirname(infasta) + "/annotation/" 
+        script = make_slurm_header(path, "annotate_bin_" + name, self.project,  time = "1-00:00:00", deps = deps)
+        script += make_bin_bmfa(infasta, path, name = name)
+        with open(path +  "annotate_bin.sh","w") as handle:
+            handle.writelines(script)
+        if submit :
+            job = sh.sbatch(path + "annotate_bin.sh")
+            if not self.job_ids.has_key('annotate'):
+                self.job_ids['annotate'] = {}
+            self.job_ids['maps'][name] = job.split()[-1]
+            print "Launched mapper on", infasta
+            with open(self.job_file, 'w') as handle:
+                json.dump(self.job_ids, handle)
+
+                
 
 mendota = Assembly("mendota.json","b2011138")
 troutbog = Assembly("troutbog.json","b2011138")
+cami_hc = Assembly("cami_h.json","b2013086")
