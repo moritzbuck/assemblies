@@ -180,8 +180,8 @@ rm tmp
 def make_bin_bmfa(infasta, path, name, threads = 16, coverages = None, hmmdb="~/glob/data/pfam/Pfam-A.hmm"):
     raw = """module load hmmer"""
     raw += """\nprokka --outdir %s/prokka/ --cpus %i --locustag %s --force %s""" % (path, threads, name, infasta)
-    raw += """\nhmmsearch --cpu %d %s %s > %s""" % (threads, hmmdb, infasta, path + os.path.basename(hmmdb) +".raw")
-    raw += """\ncheckm lineage_wf -t %i -x fna %s/prokka  %s/checkm > %scheckm.txt""" % (threads, path, path, path)
+#    raw += """\nhmmsearch --cpu %d %s %s > %s""" % (threads, hmmdb, infasta, path + os.path.basename(hmmdb) +".raw")
+    raw += """\ncheckm lineage_wf -t %i -x fna %s/prokka  %s/checkm > %s/checkm.txt""" % (threads, path, path, path)
     return raw
 
 

@@ -235,7 +235,21 @@ class Assembly(object):
             with open(self.job_file, 'w') as handle:
                 json.dump(self.job_ids, handle)
 
-                
+    def annotate_all_bins(self, path, submit = False, deps = None):
+        bins = [".".join(b.split(".")[:-1]) for b in os.listdir(path) if "bin" in b and "fasta" in b]
+        for b in bins:
+            script = make_slurm_header(path + b + "/", "annotate_" + b, self.project,  time = "4:00:00", deps = deps, cores = 1)
+            script += make_bin_bmfa(path + b + ".fasta", path + b, name = b, threads = 1)
+            with open(path + b + "/" +  "annotate_bin.sh","w") as handle:
+                handle.writelines(script)
+            if submit :
+                job = sh.sbatch(path + b + "/" + "annotate_bin.sh")
+                if not self.job_ids.has_key('annotate'):
+                    self.job_ids['annotate'] = {}
+                print "Launched mapper on", b
+                with open(self.job_file, 'w') as handle:
+                    json.dump(self.job_ids, handle)
+
 
 mendota = Assembly("mendota.json","b2011138")
 troutbog = Assembly("troutbog.json","b2011138")
