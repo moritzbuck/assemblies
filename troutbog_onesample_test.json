@@ -1,0 +1,8 @@
+{
+	"name"		:	"troutbog",
+	"out_path"	:	"/home/moritz/b2011138/TroutBog/assemblies_IHUT_test/",
+	"samples"	:	
+	{
+		"IHUT"	:	{	"reads"	:	[	{"U"	:	"/proj/b2011138/TroutBog/all_raws/IHUT.fastq" } ] }
+	}
+}

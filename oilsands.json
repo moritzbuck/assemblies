@@ -1,0 +1,20 @@
+{
+	"name"		:	"oilsands",
+	"out_path"	:	"/home/moritz/people/valerie/Oilsands/",
+	"samples"	:	
+	{	
+		"Sample_01" : {"reads" :	[{	"1"	:	"/proj/b2014083/INBOX/140627_D00118_0147_AC4A0BACXX/Sample_1/1_ATCACG_L001_R1_001.fastq.gz", "2"	:	"/proj/b2014083/INBOX/140627_D00118_0147_AC4A0BACXX/Sample_1/1_ATCACG_L001_R2_001.fastq.gz"		}	]	}, 
+		"Sample_02" : {"reads" :	[{	"1"	:	"/proj/b2014083/INBOX/140627_D00118_0147_AC4A0BACXX/Sample_2/2_CGATGT_L001_R1_001.fastq.gz", "2"	:	"/proj/b2014083/INBOX/140627_D00118_0147_AC4A0BACXX/Sample_2/2_CGATGT_L001_R2_001.fastq.gz"		}	]	}, 
+		"Sample_03" : {"reads" :	[{	"1"	:	"/proj/b2014083/INBOX/140627_D00118_0147_AC4A0BACXX/Sample_3/3_TTAGGC_L001_R1_001.fastq.gz", "2"	:	"/proj/b2014083/INBOX/140627_D00118_0147_AC4A0BACXX/Sample_3/3_TTAGGC_L001_R2_001.fastq.gz"		}	]	}, 
+		"Sample_04" : {"reads" :	[{	"1"	:	"/proj/b2014083/INBOX/140627_D00118_0147_AC4A0BACXX/Sample_4/4_TGACCA_L001_R1_001.fastq.gz", "2"	:	"/proj/b2014083/INBOX/140627_D00118_0147_AC4A0BACXX/Sample_4/4_TGACCA_L001_R2_001.fastq.gz"		}	]	},
+		"Sample_05" : {"reads" :	[{	"1"	:	"/proj/b2014083/INBOX/140627_D00118_0147_AC4A0BACXX/Sample_5/5_ACAGTG_L001_R1_001.fastq.gz", "2"	:	"/proj/b2014083/INBOX/140627_D00118_0147_AC4A0BACXX/Sample_5/5_ACAGTG_L001_R2_001.fastq.gz"		}	]	}, 
+		"Sample_06" : {"reads" :	[{	"1"	:	"/proj/b2014083/INBOX/140627_D00118_0147_AC4A0BACXX/Sample_6/6_GCCAAT_L001_R1_001.fastq.gz", "2"	:	"/proj/b2014083/INBOX/140627_D00118_0147_AC4A0BACXX/Sample_6/6_GCCAAT_L001_R2_001.fastq.gz"		}	]	}, 
+		"Sample_07" : {"reads" :	[{	"1"	:	"/proj/b2014083/INBOX/140627_D00118_0147_AC4A0BACXX/Sample_7/7_CAGATC_L001_R1_001.fastq.gz", "2"	:	"/proj/b2014083/INBOX/140627_D00118_0147_AC4A0BACXX/Sample_7/7_CAGATC_L001_R2_001.fastq.gz"		}	]	}, 
+		"Sample_08" : {"reads" :	[{	"1"	:	"/proj/b2014083/INBOX/140627_D00118_0147_AC4A0BACXX/Sample_8/8_ACTTGA_L001_R1_001.fastq.gz", "2"	:	"/proj/b2014083/INBOX/140627_D00118_0147_AC4A0BACXX/Sample_8/8_ACTTGA_L001_R2_001.fastq.gz"		}	]	}, 
+		"Sample_09" : {"reads" :	[{	"1"	:	"/proj/b2014083/INBOX/140627_D00118_0147_AC4A0BACXX/Sample_9/9_GATCAG_L001_R1_001.fastq.gz", "2"	:	"/proj/b2014083/INBOX/140627_D00118_0147_AC4A0BACXX/Sample_9/9_GATCAG_L001_R2_001.fastq.gz"		}	]	},
+		"Sample_10" : {"reads" :	[{	"1"	:	"/proj/b2014083/INBOX/140627_D00118_0147_AC4A0BACXX/Sample_10/10_TAGCTT_L001_R1_001.fastq.gz", "2"	:	"/proj/b2014083/INBOX/140627_D00118_0147_AC4A0BACXX/Sample_10/10_TAGCTT_L001_R2_001.fastq.gz"	}	]	},
+		"SRR636559" : {"reads" :	[{	"1"	:	"/home/moritz/people/valerie/OilSands/reads/SRR636559_1.fastq", "2"	:	"/home/moritz/people/valerie/OilSands/reads/SRR636559_2.fastq"}	]	},
+		"SRR634694" : {"reads" :	[{	"U"	:	"/home/moritz/people/valerie/OilSands/reads/SRR634694.fastq"	}	]	},
+		"SRR634695" : {"reads" :	[{	"U"	:	"/home/moritz/people/valerie/OilSands/reads/SRR634695.fastq"	}	]	}
+	}
+}

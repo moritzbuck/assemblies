@@ -1,0 +1,8 @@
+{
+	"name"		:	"deepbio_2",
+	"out_path"	:	"/home/moritz/people/valerie/deepbio_2/",
+	"samples"	:	
+	{	
+		"deepbio_2" : {"reads" :	[{	"1"	:	"/proj/b2011032/INBOX/140916_D00118_0155_AC4VNCACXX/Sample_10/10_ACTTGA_L004_R1_001.fastq.gz", "2"	:	"/proj/b2011032/INBOX/140916_D00118_0155_AC4VNCACXX/Sample_10/10_ACTTGA_L004_R2_001.fastq.gz"		}	]	}
+	}
+}
