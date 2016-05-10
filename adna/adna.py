@@ -30,35 +30,6 @@ samples = {b : {} for  b in folders.keys()}
 for b in folders.keys(): 
     samples[b]["reads"] = [{"U" : pjoin(folders[b],f) } for f in os.listdir(folders[b]) if f[-8:] == "fastq.gz"]
 
-
-# take care of the samples that bugged (e.g. the sequencing facility did not demultiplex for some reason
-
-buggy_lane = pjoin(root, "20160113_data/ftp.dna.ku.dk/20160105_hiseq4a/lane2/")
-buggy_libs = [pjoin(buggy_lane,b) for b in os.listdir(buggy_lane)  if b[-8:] == "fastq.gz"]
-buggy_samples = [k for k in list(samples_metadata.index) if k not in folders.keys()]
-index2sample = {v :k for k,v in samples_metadata.loc[buggy_samples]['Index sequence'].to_dict().iteritems()}
-run = False
-if run:
-    deplexed = {b : [] for b in buggy_samples}
-    for f in  buggy_libs:
-        print "processing ", f
-        with gzip.open(f) as handle:
-            for s in tqdm(SeqIO.parse(handle,"fastq")):
-                tag = s.description.split(":")[-1]
-                if index2sample.has_key(tag):
-                    deplexed[index2sample[tag]] += [s]
-            
-
-for b in buggy_samples:
-    sample_folder = pjoin(outfolder, "samples", b)
-    if run:
-        print "writting samples ", b 
-        if not os.path.exists(sample_folder):
-            os.makedirs(sample_folder)
-        with gzip.open(pjoin(sample_folder,b + "_reads.fastq.gz"),"w") as handle:
-            SeqIO.write(deplexed[b],handle,"fastq")
-#    samples[b] = {}
-#    samples[b]['reads'] = [{"U" : pjoin(sample_folder,b + "_reads.fastq.gz")}]
     
 assembly_data = {"name": "adna", "out_path" : outfolder, "samples" : samples}
 with open(pjoin(outfolder, "assembly_data.json"),"w") as handle:
